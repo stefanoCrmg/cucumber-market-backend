@@ -1,0 +1,6 @@
+semi: false
+singleQuote: true
+trailingComma: all
+parser: typescript
+useTabs: false
+tabWidth: 2

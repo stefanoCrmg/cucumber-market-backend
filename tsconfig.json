@@ -1,0 +1,50 @@
+{
+  "compilerOptions": {
+    "target": "es2020",
+    "module": "es2020",
+    "allowJs": false,
+    "removeComments": true,
+    "resolveJsonModule": true,
+    "typeRoots": [
+      "./node_modules/@types"
+    ],
+    "sourceMap": true,
+    "outDir": "dist",
+    "lib": [
+      "es2020"
+    ],
+    "baseUrl": ".",
+    "strict": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "strictFunctionTypes": true,
+    "strictBindCallApply": true,
+    "strictPropertyInitialization": true,
+    "noImplicitThis": true,
+    "alwaysStrict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedIndexedAccess": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "useUnknownInCatchVariables": true,
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "noErrorTruncation": true,
+    "paths": {
+      "@handlers/*": [
+        "./src/handlers/*"
+      ],
+      "@middlewares/*": [
+        "./src/middlewares/*"
+      ]
+    }
+  },
+  "include": [
+    "src/**/*"
+  ],
+  "exclude": ["node_modules"],
+}

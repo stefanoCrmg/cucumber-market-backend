@@ -2,7 +2,6 @@ import { Serialized } from '@unsplash/sum-types'
 import { pipe } from 'fp-ts/function'
 import * as H from 'hyper-ts'
 import * as M from 'hyper-ts/lib/Middleware'
-
 import { BadRequest, normalizeError, RouteError } from './routeError'
 
 const {
@@ -37,8 +36,6 @@ export const sendUnauthorized = (
   sendJson(H.Status.Unauthorized, { message })
 
 export const sendNotFound = sendStatus(H.Status.NotFound)
-export const sendMethodNotAllowed = sendStatus(H.Status.MethodNotAllowed)
-
 export const sendInternalServerError = sendStatus(H.Status.InternalServerError)
 
 export const sendJson = (

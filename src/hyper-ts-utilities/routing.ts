@@ -26,7 +26,7 @@ const decodeMethod: M.Middleware<
   HttpMethod
 > = pipe(
   M.decodeMethod((s) => HttpMethod.decode(s.toLowerCase())),
-  M.mapLeft((): RouteError => RouteError.mk.UnknownMethod),
+  M.mapLeft((): RouteError => RouteError.mk.NotFound),
 )
 
 export type RouteHandler = RM.ReaderMiddleware<
@@ -64,7 +64,7 @@ const handleRoute = <A extends Sum.AnyMember>(
     O.fromNullable,
     O.chainNullableK((routeHandlers) => routeHandlers[method]),
     O.match(
-      () => RM.fromMiddleware(HR.sendMethodNotAllowed),
+      () => RM.fromMiddleware(HR.sendNotFound),
       (handler) => handler(Sum.serialize(route)[1]),
     ),
   )

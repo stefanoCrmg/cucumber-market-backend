@@ -1,7 +1,7 @@
 import { pipe } from 'fp-ts/lib/function'
 import { fromRequestHandler } from 'hyper-ts/lib/express'
 import { RouteError, normalizeError } from './routeError'
-import { RouteHandler } from './routeHandler'
+import { RouteHandler } from './routing'
 import * as RM from 'hyper-ts/lib/ReaderMiddleware'
 import * as E from 'fp-ts/Either'
 import bodyParser from 'body-parser'

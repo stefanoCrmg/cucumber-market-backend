@@ -33,7 +33,7 @@ export const router = zero<Location>()
   .alt(postMeMatch.parser.map(Location.mk.PostMe))
 
 export const handlers: Handlers<Location> = {
-  Hello: { get: getHelloHandler },
+  Hello: { get: () => getHelloHandler },
   AnotherOne: { get: getAnotherOneHandler },
   PostMe: { post: withJsonBodyParser(postMeHandler) },
 }

@@ -9,7 +9,6 @@ export const defaultErrorHandler: <Env>(
   e: RouteError,
 ) => RM.ReaderMiddleware<Env, H.StatusOpen, H.ResponseEnded, never, void> =
   RouteError.match({
-    UnknownMethod: () => RM.fromMiddleware(HR.sendMethodNotAllowed),
     NotFound: () => RM.fromMiddleware(HR.sendNotFound),
     SomeException: ({ exception }) =>
       pipe(
@@ -26,6 +25,4 @@ export const defaultErrorHandler: <Env>(
     BadRequest: flow(HR.sendBadRequest, RM.fromMiddleware),
     Unauthorized: ({ message }) =>
       RM.fromMiddleware(HR.sendUnauthorized(message)),
-    Conflict: ({ message }) =>
-      RM.fromMiddleware(HR.sendJson(H.Status.Conflict, { message })),
   })

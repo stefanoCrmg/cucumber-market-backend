@@ -1,5 +1,4 @@
 import { RouteError } from './routeError'
-import * as HR from './responses'
 import { Parser, Route } from 'fp-ts-routing'
 import * as E from 'fp-ts/Either'
 import * as O from 'fp-ts/Option'
@@ -10,6 +9,7 @@ import * as RM from 'hyper-ts/lib/ReaderMiddleware'
 import * as t from 'io-ts'
 import * as Sum from '@unsplash/sum-types'
 import { ServerEnv } from 'src/serverEnv'
+import { sendNotFound } from './responses'
 
 const HttpMethod = t.keyof({
   get: null,
@@ -64,7 +64,7 @@ const handleRoute = <A extends Sum.AnyMember>(
     O.fromNullable,
     O.chainNullableK((routeHandlers) => routeHandlers[method]),
     O.match(
-      () => RM.fromMiddleware(HR.sendNotFound),
+      () => RM.fromMiddleware(sendNotFound),
       (handler) => handler(Sum.serialize(route)[1]),
     ),
   )

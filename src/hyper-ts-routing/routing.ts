@@ -20,6 +20,14 @@ export type RouteHandler = RM.ReaderMiddleware<
   void
 >
 
+export type CleanRouteHandler = RM.ReaderMiddleware<
+  ServerEnv,
+  H.StatusOpen,
+  H.ResponseEnded,
+  never,
+  void
+>
+
 export type Handlers<A extends Sum.AnyMember> = {
   [Loc in Sum.Serialized<A> as Loc[0]]: Partial<
     Readonly<Record<HttpMethod, (params: Loc[1]) => RouteHandler>>
@@ -69,7 +77,7 @@ export const routerMiddleware = <A extends Sum.AnyMember>(
   routes: Parser<A>,
   handlers: Handlers<A>,
   defaultErrorHandler: DefaultErrorHandler,
-): RM.ReaderMiddleware<ServerEnv, H.StatusOpen, H.ResponseEnded, never, void> =>
+): CleanRouteHandler =>
   pipe(
     fromParser(routes),
     M.bindTo('route'),

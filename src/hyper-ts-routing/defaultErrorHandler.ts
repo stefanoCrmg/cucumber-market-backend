@@ -2,7 +2,6 @@ import { ServerEnv } from 'src/serverEnv'
 import * as C from 'fp-ts/Console'
 import { RouteError } from './routeError'
 import { pipe } from 'fp-ts/function'
-import * as H from 'hyper-ts'
 import * as RM from 'hyper-ts/lib/ReaderMiddleware'
 import {
   sendNotFound,
@@ -10,10 +9,9 @@ import {
   sendBadRequest,
   sendUnauthorized,
 } from './responses'
+import { CleanRouteHandler } from './routing'
 
-export type DefaultErrorHandler = (
-  e: RouteError,
-) => RM.ReaderMiddleware<ServerEnv, H.StatusOpen, H.ResponseEnded, never, void>
+export type DefaultErrorHandler = (e: RouteError) => CleanRouteHandler
 
 export const defaultErrorHandler: DefaultErrorHandler = RouteError.match({
   NotFound: () => RM.fromMiddleware(sendNotFound),

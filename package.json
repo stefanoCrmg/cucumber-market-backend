@@ -4,7 +4,7 @@
   "main": "dist/main.js",
   "license": "MIT",
   "scripts": {
-    "dev": "concurrently \"npm run watch-compile\" \"npm run watch-dev\"",
+    "dev": "dotenv -- cross-var concurrently \"npm run watch-compile\" \"npm run watch-dev\"",
     "watch-compile": "swc src -w --out-dir dist",
     "watch-dev": "nodemon --watch \"dist/**/*\" -e js ./dist/main.js",
     "build": "swc src -d dist",
@@ -12,7 +12,8 @@
     "clean": "rm -rf dist",
     "lint": "eslint --ext .ts src",
     "lint:fix": "eslint --ext .ts src --fix",
-    "test": "jest"
+    "test": "jest",
+    "prisma:migrate": "prisma migrate dev --name init"
   },
   "devDependencies": {
     "@swc/cli": "^0.1.57",
@@ -38,9 +39,12 @@
     "typescript": "*"
   },
   "dependencies": {
+    "@prisma/client": "^4.3.1",
     "@unsplash/sum-types": "^0.3.0",
     "body-parser": "^1.20.0",
+    "cross-var": "^1.1.0",
     "dotenv": "^16.0.2",
+    "dotenv-cli": "^6.0.0",
     "express": "^4.18.1",
     "fp-ts": "^2.12.3",
     "fp-ts-contrib": "^0.1.29",
@@ -49,6 +53,7 @@
     "hyper-ts": "^0.7.8",
     "io-ts": "^2.2.18",
     "io-ts-types": "^0.5.16",
+    "prisma": "^4.3.1",
     "ts-adt": "^2.1.2"
   }
 }

@@ -9,6 +9,7 @@ import { PrismaClient } from '@prisma/client'
 import { identity, pipe } from 'fp-ts/lib/function'
 import { normalizeError } from './hyper-ts-utilities/routeError'
 import { exit } from 'process'
+import bodyParser from 'body-parser'
 
 pipe(
   TE.tryCatch(
@@ -22,6 +23,7 @@ pipe(
   TE.bindTo('prismaClient'),
   TE.map((dbEnv) =>
     express()
+      .use(bodyParser.json())
       .use(
         toRequestHandler(
           routerMiddleware(router, handlers, defaultErrorHandler)(dbEnv),

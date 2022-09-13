@@ -1,4 +1,3 @@
-import { withJsonBodyParser } from './hyper-ts-utilities/helpers'
 import { end, lit, query, then, zero } from 'fp-ts-routing'
 import { pipe } from 'fp-ts/function'
 import { Handlers } from './hyper-ts-utilities/routing'
@@ -35,5 +34,5 @@ export const router = zero<Location>()
 export const handlers: Handlers<Location> = {
   Hello: { get: () => getHelloHandler },
   AnotherOne: { get: getAnotherOneHandler },
-  PostMe: { post: withJsonBodyParser(postMeHandler) },
+  PostMe: { post: postMeHandler },
 }

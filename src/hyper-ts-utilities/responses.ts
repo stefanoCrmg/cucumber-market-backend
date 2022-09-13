@@ -17,9 +17,6 @@ export const sendStatus = (
     M.ichain(() => M.end()),
   )
 
-export const sendOK = sendStatus(H.Status.OK)
-export const sendNoContent = sendStatus(H.Status.NoContent)
-
 export const sendBadRequest = ({
   message,
   errors,
@@ -49,8 +46,3 @@ export const sendJson = (
     ),
     M.orElse(() => sendInternalServerError),
   )
-
-export const sendJsonOK = (
-  body: unknown,
-): M.Middleware<H.StatusOpen, H.ResponseEnded, never, void> =>
-  sendJson(H.Status.OK, body)

@@ -11,6 +11,20 @@ import * as Sum from '@unsplash/sum-types'
 import { ServerEnv } from 'src/serverEnv'
 import { sendNotFound } from './responses'
 
+export type RouteHandler = RM.ReaderMiddleware<
+  ServerEnv,
+  H.StatusOpen,
+  H.ResponseEnded,
+  RouteError,
+  void
+>
+
+export type Handlers<A extends Sum.AnyMember> = {
+  [Loc in Sum.Serialized<A> as Loc[0]]: Partial<
+    Readonly<Record<HttpMethod, (params: Loc[1]) => RouteHandler>>
+  >
+}
+
 const HttpMethod = t.keyof({
   get: null,
   post: null,
@@ -29,30 +43,19 @@ const decodeMethod: M.Middleware<
   M.mapLeft((): RouteError => RouteError.mk.NotFound),
 )
 
-export type RouteHandler = RM.ReaderMiddleware<
-  ServerEnv,
-  H.StatusOpen,
-  H.ResponseEnded,
-  RouteError,
-  void
->
-
 const fromParser = <A extends object>(
   parser: Parser<A>,
 ): M.Middleware<H.StatusOpen, H.StatusOpen, RouteError, A> =>
   M.fromConnection((c) =>
     pipe(
-      parser.run(Route.parse(c.getOriginalUrl())),
-      O.map(([a]) => E.right(a)),
-      O.getOrElse(() => E.left(RouteError.mk.NotFound)),
+      Route.parse(c.getOriginalUrl()),
+      parser.run,
+      O.match(
+        () => E.left(RouteError.mk.NotFound),
+        ([a]) => E.right(a),
+      ),
     ),
   )
-
-export type Handlers<A extends Sum.AnyMember> = {
-  [Loc in Sum.Serialized<A> as Loc[0]]: Partial<
-    Readonly<Record<HttpMethod, (params: Loc[1]) => RouteHandler>>
-  >
-}
 
 const handleRoute = <A extends Sum.AnyMember>(
   route: A,

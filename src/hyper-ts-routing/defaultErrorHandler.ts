@@ -1,7 +1,7 @@
 import { ServerEnv } from 'src/serverEnv'
 import * as C from 'fp-ts/Console'
 import { RouteError } from './routeError'
-import { flow, pipe } from 'fp-ts/function'
+import { pipe } from 'fp-ts/function'
 import * as H from 'hyper-ts'
 import * as RM from 'hyper-ts/lib/ReaderMiddleware'
 import {
@@ -29,6 +29,16 @@ export const defaultErrorHandler: DefaultErrorHandler = RouteError.match({
       RM.rightIO,
       RM.ichainMiddlewareK(() => sendInternalServerError),
     ),
-  BadRequest: flow(sendBadRequest, RM.fromMiddleware),
-  Unauthorized: ({ message }) => RM.fromMiddleware(sendUnauthorized(message)),
+  BadRequest: ({ errors, message }) =>
+    pipe(
+      C.error(`Bad Request: ${errors} -- ${message}`),
+      RM.rightIO,
+      RM.ichainMiddlewareK(() => sendBadRequest({ message, errors })),
+    ),
+  Unauthorized: ({ message }) =>
+    pipe(
+      C.error(`Unauthorized: ${message}`),
+      RM.rightIO,
+      RM.ichainMiddlewareK(() => sendUnauthorized(message)),
+    ),
 })

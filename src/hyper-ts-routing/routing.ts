@@ -6,11 +6,11 @@ import { pipe } from 'fp-ts/function'
 import * as H from 'hyper-ts'
 import * as M from 'hyper-ts/lib/Middleware'
 import * as RM from 'hyper-ts/lib/ReaderMiddleware'
-import * as t from 'io-ts'
 import * as Sum from '@unsplash/sum-types'
 import { ServerEnv } from 'src/serverEnv'
 import { sendNotFound } from './responses'
 import { DefaultErrorHandler } from './defaultErrorHandler'
+import { HttpMethod } from './consts'
 
 export type RouteHandler = RM.ReaderMiddleware<
   ServerEnv,
@@ -25,14 +25,6 @@ export type Handlers<A extends Sum.AnyMember> = {
     Readonly<Record<HttpMethod, (params: Loc[1]) => RouteHandler>>
   >
 }
-
-const HttpMethod = t.keyof({
-  get: null,
-  post: null,
-  patch: null,
-  put: null,
-})
-export type HttpMethod = t.TypeOf<typeof HttpMethod>
 
 const decodeMethod: M.Middleware<
   H.StatusOpen,
@@ -84,5 +76,5 @@ export const routerMiddleware = <A extends Sum.AnyMember>(
     M.apSW('method', decodeMethod),
     RM.fromMiddleware,
     RM.ichainW(({ method, route }) => handleRoute(route, method, handlers)),
-    RM.orElseW(defaultErrorHandler),
+    RM.orElse(defaultErrorHandler),
   )

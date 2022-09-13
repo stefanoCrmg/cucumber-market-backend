@@ -7,7 +7,7 @@ import { handlers, router } from './routes'
 import { defaultErrorHandler } from './hyper-ts-utilities/defaultErrorHandler'
 import { PrismaClient } from '@prisma/client'
 import { identity, pipe } from 'fp-ts/lib/function'
-import { normalizeError } from './hyper-ts-utilities/routeError'
+import { makeStandardError } from './hyper-ts-utilities/routeError'
 import { exit } from 'process'
 import bodyParser from 'body-parser'
 
@@ -18,7 +18,7 @@ pipe(
       await prismaClient.$connect()
       return prismaClient
     },
-    (reason) => normalizeError(reason),
+    (reason) => makeStandardError(reason),
   ),
   TE.bindTo('prismaClient'),
   TE.map((dbEnv) =>

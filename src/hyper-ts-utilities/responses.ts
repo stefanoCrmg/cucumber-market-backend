@@ -2,7 +2,7 @@ import { Serialized } from '@unsplash/sum-types'
 import { pipe } from 'fp-ts/function'
 import * as H from 'hyper-ts'
 import * as M from 'hyper-ts/lib/Middleware'
-import { BadRequest, normalizeError, RouteError } from './routeError'
+import { BadRequest, makeStandardError, RouteError } from './routeError'
 
 const {
   mk: { SomeException },
@@ -42,7 +42,7 @@ export const sendJson = (
   pipe(
     M.status(status),
     M.ichain(() =>
-      M.json(body, (_) => SomeException({ exception: normalizeError(_) })),
+      M.json(body, (_) => SomeException({ exception: makeStandardError(_) })),
     ),
     M.orElse(() => sendInternalServerError),
   )

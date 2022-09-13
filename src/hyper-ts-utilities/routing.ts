@@ -10,6 +10,7 @@ import * as t from 'io-ts'
 import * as Sum from '@unsplash/sum-types'
 import { ServerEnv } from 'src/serverEnv'
 import { sendNotFound } from './responses'
+import { DefaultErrorHandler } from './defaultErrorHandler'
 
 export type RouteHandler = RM.ReaderMiddleware<
   ServerEnv,
@@ -40,7 +41,7 @@ const decodeMethod: M.Middleware<
   HttpMethod
 > = pipe(
   M.decodeMethod((s) => HttpMethod.decode(s.toLowerCase())),
-  M.mapLeft((): RouteError => RouteError.mk.NotFound),
+  M.mapLeft(() => RouteError.mk.NotFound),
 )
 
 const fromParser = <A extends object>(
@@ -72,18 +73,10 @@ const handleRoute = <A extends Sum.AnyMember>(
     ),
   )
 
-export const routerMiddleware = <A extends Sum.AnyMember, E>(
+export const routerMiddleware = <A extends Sum.AnyMember>(
   routes: Parser<A>,
   handlers: Handlers<A>,
-  defaultErrorHandler: (
-    e: E | RouteError,
-  ) => RM.ReaderMiddleware<
-    ServerEnv,
-    H.StatusOpen,
-    H.ResponseEnded,
-    never,
-    void
-  >,
+  defaultErrorHandler: DefaultErrorHandler,
 ): RM.ReaderMiddleware<ServerEnv, H.StatusOpen, H.ResponseEnded, never, void> =>
   pipe(
     fromParser(routes),

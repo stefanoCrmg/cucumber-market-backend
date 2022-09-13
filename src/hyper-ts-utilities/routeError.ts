@@ -1,7 +1,7 @@
 import * as t from 'io-ts'
 import * as Sum from '@unsplash/sum-types'
 
-export const normalizeError = (error: unknown): Error =>
+export const makeStandardError = (error: unknown): Error =>
   error instanceof Error ? error : new Error(JSON.stringify(error))
 
 export type BadRequest = Sum.Member<

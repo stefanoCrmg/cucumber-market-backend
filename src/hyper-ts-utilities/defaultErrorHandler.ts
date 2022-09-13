@@ -11,15 +11,11 @@ import {
   sendUnauthorized,
 } from './responses'
 
-export const defaultErrorHandler: (
+export type DefaultErrorHandler = (
   e: RouteError,
-) => RM.ReaderMiddleware<
-  ServerEnv,
-  H.StatusOpen,
-  H.ResponseEnded,
-  never,
-  void
-> = RouteError.match({
+) => RM.ReaderMiddleware<ServerEnv, H.StatusOpen, H.ResponseEnded, never, void>
+
+export const defaultErrorHandler: DefaultErrorHandler = RouteError.match({
   NotFound: () => RM.fromMiddleware(sendNotFound),
   SomeException: ({ exception }) =>
     pipe(

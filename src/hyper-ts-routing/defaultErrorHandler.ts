@@ -1,4 +1,3 @@
-import { ServerEnv } from 'src/serverEnv'
 import * as C from 'fp-ts/Console'
 import { RouteError } from './routeError'
 import { pipe } from 'fp-ts/function'

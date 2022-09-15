@@ -1,17 +1,10 @@
 module.exports = {
   testRegex: '/test/',
-  // collectCoverage: true,
-  // collectCoverageFrom: ['./src/**/*'],
-  // coveragePathIgnorePatterns: ['index.ts'],
-  // coverageProvider: 'v8',
-  // coverageThreshold: {
-  //   global: {
-  //     branches: 100,
-  //     functions: 100,
-  //     lines: 100,
-  //     statements: 100,
-  //   },
-  // },
+  moduleNameMapper: {
+    '^@handlers/(.*)$': '<rootDir>/src/handlers/$1',
+    '^@middlewares/(.*)$': '<rootDir>/src/middlewares/$1',
+  },
+  modulePathIgnorePatterns: ['jestHelpers'],
   transform: {
     '^.+\\.(t|j)sx?$': ['@swc/jest'],
   },

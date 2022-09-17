@@ -9,6 +9,8 @@ import {
   sendUnauthorized,
 } from './responses'
 import { CleanRouteHandler } from './routing'
+import * as pc from 'picocolors'
+import { formatValidationErrors } from 'io-ts-reporters'
 
 export type DefaultErrorHandler = (e: RouteError) => CleanRouteHandler
 
@@ -20,9 +22,13 @@ export const defaultErrorHandler: DefaultErrorHandler = RouteError.match({
       RM.rightIO,
       RM.ichainMiddlewareK(() => sendInternalServerError),
     ),
-  DecodingFailure: ({ errors }) =>
+  DecodingFailure: ({ errors, codecName }) =>
     pipe(
-      C.error(`Decoding failure: ${errors}`),
+      C.error(
+        `DecodingFailure: Using codec: ${pc.blue(
+          pc.underline(codecName),
+        )} but got ${pc.yellow(formatValidationErrors(errors).join('\n'))}`,
+      ),
       RM.rightIO,
       RM.ichainMiddlewareK(() => sendInternalServerError),
     ),

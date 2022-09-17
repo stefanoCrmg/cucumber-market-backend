@@ -9,7 +9,8 @@
     "target": "es2020",
     "paths": {
       "@handlers/*": ["./src/handlers/*"],
-      "@middlewares/*": ["./src/middlewares/*"]
+      "@middlewares/*": ["./src/middlewares/*"],
+      "@fp/*": ["./src/fp/*"]
     },
     "baseUrl": "."
   },

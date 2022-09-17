@@ -1,20 +1,31 @@
+import { NonEmptyString } from 'io-ts-types'
 import { end, lit, query, then, zero } from 'fp-ts-routing'
 import { pipe } from 'fp-ts/function'
-import { Handlers } from './hyper-ts-utilities/routing'
 import { getHelloHandler } from '@handlers/getHelloHandler'
 import { getAnotherOneHandler } from '@handlers/getAnotherOneHandler'
 import { postMeHandler } from '@handlers/postMeHandler'
+import {
+  getQuoteHandler,
+  RouteParams as getQuoteRouteParams,
+} from '@handlers/getQuoteHandler'
 import * as Sum from '@unsplash/sum-types'
 import * as t from 'io-ts'
+import { Handlers } from './hyper-ts-routing/routing'
 
 type Location =
   | Sum.Member<'Hello', {}>
+  | Sum.Member<'Quote', { readonly symbol: NonEmptyString }>
   | Sum.Member<'AnotherOne', { readonly userId: string }>
   | Sum.Member<'PostMe', { readonly userId: string }>
 
 const Location = Sum.create<Location>()
 
 const helloMatch = pipe(lit('hello'), then(end))
+const quoteMatch = pipe(
+  lit('quote'),
+  then(query(getQuoteRouteParams)),
+  then(end),
+)
 const anotherOneMatch = pipe(
   lit('another'),
   then(query(t.readonly(t.type({ userId: t.string })))),
@@ -28,11 +39,13 @@ const postMeMatch = pipe(
 
 export const router = zero<Location>()
   .alt(helloMatch.parser.map(Location.mk.Hello))
+  .alt(quoteMatch.parser.map(Location.mk.Quote))
   .alt(anotherOneMatch.parser.map(Location.mk.AnotherOne))
   .alt(postMeMatch.parser.map(Location.mk.PostMe))
 
 export const handlers: Handlers<Location> = {
   Hello: { get: () => getHelloHandler },
+  Quote: { get: getQuoteHandler },
   AnotherOne: { get: getAnotherOneHandler },
   PostMe: { post: postMeHandler },
 }

@@ -29,7 +29,7 @@
     "noUncheckedIndexedAccess": true,
     "noPropertyAccessFromIndexSignature": true,
     "useUnknownInCatchVariables": true,
-    "moduleResolution": "NodeNext",
+    "moduleResolution": "node",
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
@@ -40,7 +40,8 @@
       ],
       "@middlewares/*": [
         "./src/middlewares/*"
-      ]
+      ],
+      "@fp/*": ["./src/fp/*"]
     }
   },
   "include": [

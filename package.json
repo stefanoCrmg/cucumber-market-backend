@@ -4,10 +4,11 @@
   "main": "dist/main.js",
   "license": "MIT",
   "scripts": {
-    "dev": "dotenv -- cross-var concurrently \"npm run watch-compile\" \"npm run watch-dev\"",
+    "dev": "dotenv -- cross-var concurrently \"yarn watch-compile\" \"yarn watch-dev\"",
     "watch-compile": "swc src -w --out-dir dist",
     "watch-dev": "nodemon --watch \"dist/**/*\" -e js ./dist/main.js",
-    "build": "swc src -d dist",
+    "type:check": "tsc --noEmit --skipLibCheck",
+    "build": "yarn type:check && swc src -d dist",
     "start": "NODE_ENV=production node dist/main.js",
     "clean": "rm -rf dist",
     "lint": "eslint --ext .ts src",

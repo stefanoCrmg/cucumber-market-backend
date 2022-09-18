@@ -1,5 +1,5 @@
-import { DecodingFailure } from './../hyper-ts-routing/routeError'
 /* adapted from https://github.com/unsplash/request-frp */
+import { DecodingFailure } from './../hyper-ts-routing/routeError'
 import { formatValidationErrors } from 'io-ts-reporters'
 import * as ContentTypeHelpers from 'content-type'
 import * as E from 'fp-ts/Either'
@@ -99,7 +99,10 @@ export const fromFetch: (
   fetch,
   flow(
     (error) => (error instanceof Error ? error.message : 'Unknown error.'),
-    (message) => GenericFetchError({ message }),
+    (message) => {
+      console.log('qua')
+      return GenericFetchError({ message })
+    },
   ),
 )
 

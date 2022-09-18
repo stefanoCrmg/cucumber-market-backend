@@ -4,6 +4,7 @@
 /node_modules
 /dist
 /.pnp
+/.swc
 .pnp.js
 
 # testing

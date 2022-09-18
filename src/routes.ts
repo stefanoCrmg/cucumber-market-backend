@@ -1,31 +1,44 @@
 import { NonEmptyString } from 'io-ts-types'
 import { end, lit, query, then, zero } from 'fp-ts-routing'
 import { pipe } from 'fp-ts/function'
-import { getHelloHandler } from '@handlers/getHelloHandler'
+import { getHealthHandler } from '@handlers/getHealthHandler'
 import { getAnotherOneHandler } from '@handlers/getAnotherOneHandler'
 import { postMeHandler } from '@handlers/postMeHandler'
 import {
   getQuoteHandler,
   RouteParams as getQuoteRouteParams,
 } from '@handlers/getQuoteHandler'
+import {
+  findSymbolHandler,
+  RouteParams as findSymbolRouteParams,
+} from '@handlers/findSymbolHandler'
 import * as Sum from '@unsplash/sum-types'
 import * as t from 'io-ts'
 import { Handlers } from './hyper-ts-routing/routing'
 
 type Location =
-  | Sum.Member<'Hello', {}>
+  | Sum.Member<'Health', {}>
   | Sum.Member<'Quote', { readonly symbol: NonEmptyString }>
+  | Sum.Member<'SymbolLookup', { readonly identifier: NonEmptyString }>
   | Sum.Member<'AnotherOne', { readonly userId: string }>
   | Sum.Member<'PostMe', { readonly userId: string }>
 
 const Location = Sum.create<Location>()
 
-const helloMatch = pipe(lit('hello'), then(end))
+const healthMatch = pipe(lit('health'), then(end))
+
 const quoteMatch = pipe(
   lit('quote'),
   then(query(getQuoteRouteParams)),
   then(end),
 )
+
+const symbolLookupMatch = pipe(
+  lit('symbol'),
+  then(query(findSymbolRouteParams)),
+  then(end),
+)
+
 const anotherOneMatch = pipe(
   lit('another'),
   then(query(t.readonly(t.type({ userId: t.string })))),
@@ -38,14 +51,16 @@ const postMeMatch = pipe(
 )
 
 export const router = zero<Location>()
-  .alt(helloMatch.parser.map(Location.mk.Hello))
+  .alt(healthMatch.parser.map(Location.mk.Health))
   .alt(quoteMatch.parser.map(Location.mk.Quote))
   .alt(anotherOneMatch.parser.map(Location.mk.AnotherOne))
   .alt(postMeMatch.parser.map(Location.mk.PostMe))
+  .alt(symbolLookupMatch.parser.map(Location.mk.SymbolLookup))
 
 export const handlers: Handlers<Location> = {
-  Hello: { get: () => getHelloHandler },
+  Health: { get: () => getHealthHandler },
   Quote: { get: getQuoteHandler },
+  SymbolLookup: { get: findSymbolHandler },
   AnotherOne: { get: getAnotherOneHandler },
   PostMe: { post: postMeHandler },
 }

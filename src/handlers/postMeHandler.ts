@@ -9,14 +9,16 @@ import { RouteError } from '../hyper-ts-routing/routeError'
 import { Status } from 'hyper-ts'
 
 type RouteParams = { readonly userId: string }
-const Body = t.type({ age: t.number })
+const Body = t.type({ age: t.number }, 'Body')
 
 export const postMeHandler = (param: RouteParams): RouteHandler =>
   pipe(
     M.decodeBody(
       flow(
         Body.decode,
-        E.mapLeft((_) => RouteError.mk.DecodingFailure({ errors: _ })),
+        E.mapLeft((_) =>
+          RouteError.mk.DecodingFailure({ errors: _, codecName: Body.name }),
+        ),
       ),
     ),
     RM.fromMiddleware,

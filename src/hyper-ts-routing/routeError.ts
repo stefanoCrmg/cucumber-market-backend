@@ -22,7 +22,7 @@ export type RouteError =
 
 export const RouteError = Sum.create<RouteError>()
 
-export const matchFetchErrorToRouteError: (_: FetchError) => RouteError =
+export const matchFetchErrorToRouteError = (fe: FetchError): RouteError =>
   matchFetchError({
     Unauthorized: (_) =>
       RouteError.mk.Unauthorized({ message: JSON.stringify(_.data) }),
@@ -38,5 +38,7 @@ export const matchFetchErrorToRouteError: (_: FetchError) => RouteError =
       }),
     DecodingFailure: RouteError.mk.DecodingFailure,
     [Sum._]: () =>
-      RouteError.mk.SomeException({ exception: new Error('Catch-all error') }),
-  })
+      RouteError.mk.SomeException({
+        exception: new Error(JSON.stringify(Sum.serialize(fe))),
+      }),
+  })(fe)

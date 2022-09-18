@@ -1,3 +1,10 @@
+const fs = require('node:fs')
+
+const swcrc = JSON.parse(fs.readFileSync('.swcrc', 'utf8'))
+
+// If you have other plugins, change this line.
+;((swcrc.jsc ??= {}).experimental ??= {}).plugins = [['jest_workaround', {}]]
+
 module.exports = {
   testRegex: '/test/',
   moduleNameMapper: {
@@ -7,6 +14,6 @@ module.exports = {
   },
   modulePathIgnorePatterns: ['jestHelpers'],
   transform: {
-    '^.+\\.(t|j)sx?$': ['@swc/jest'],
+    '^.+\\.(t|j)sx?$': ['@swc/jest', swcrc],
   },
 }

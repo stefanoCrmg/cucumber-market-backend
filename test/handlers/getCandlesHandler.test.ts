@@ -4,7 +4,6 @@ import * as getCandles from '../../src/handlers/getCandlesHandler'
 import * as RTE from 'fp-ts/ReaderTaskEither'
 import * as E from 'fp-ts-std/Either'
 import * as t from 'io-ts'
-import { genOne } from 'mock-data-gen'
 import request from 'supertest'
 import { testServer } from '../jestHelpers/mockServerEnv'
 

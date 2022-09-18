@@ -16,7 +16,7 @@ import {
   getCandlesHandler,
   RouteParams as getCandlesRouteParams,
   Timeframe,
-} from '@handlers/getCandles'
+} from '@handlers/getCandlesHandler'
 import * as Sum from '@unsplash/sum-types'
 import * as t from 'io-ts'
 import { Handlers } from './hyper-ts-routing/routing'

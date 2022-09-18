@@ -56,6 +56,7 @@ const FinnhubCandleResponseOK = t.readonly(
   }),
   'FinnhubCandleResponseOK',
 )
+
 const FinnhubCandleResponseFAIL = t.readonly(
   t.type({
     s: t.literal('no_data'),
@@ -86,7 +87,7 @@ const {
   mk: { NoData },
 } = create<NoData>()
 
-const mapFinnhubResponseToCandles = (
+export const mapFinnhubResponseToCandles = (
   obj: FinnhubCandleResponse,
 ): E.Either<NoData, Candles> =>
   match(obj)

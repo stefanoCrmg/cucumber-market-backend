@@ -17,7 +17,7 @@ import { Member, create } from '@unsplash/sum-types'
 import * as E from 'fp-ts/Either'
 import * as RTE from 'fp-ts/ReaderTaskEither'
 import * as R from 'fp-ts/Reader'
-import { match, P } from 'ts-pattern'
+import { match } from 'ts-pattern'
 
 const DateFromNumberFromString = NumberFromString.pipe(DateFromUnixTime)
 type DateFromNumberFromString = t.TypeOf<typeof DateFromNumberFromString>

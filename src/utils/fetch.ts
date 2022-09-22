@@ -99,10 +99,7 @@ export const fromFetch: (
   fetch,
   flow(
     (error) => (error instanceof Error ? error.message : 'Unknown error.'),
-    (message) => {
-      console.log('qua')
-      return GenericFetchError({ message })
-    },
+    (message) => GenericFetchError({ message }),
   ),
 )
 

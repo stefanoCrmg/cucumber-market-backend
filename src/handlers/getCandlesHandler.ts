@@ -1,10 +1,7 @@
-import { FinnhubEnv } from '../serverEnv'
+import { fetchFromPolygon } from './../utils/polygon'
+import { PolygonEnv, LoggerEnv } from '../serverEnv'
 import { FetchError } from '../utils/fetch'
-import {
-  matchFetchErrorToRouteError,
-  RouteError,
-} from '../hyper-ts-routing/routeError'
-import { unwrapFinnhubApiKey } from '../serverEnv'
+import { matchFetchErrorToRouteError } from '../hyper-ts-routing/routeError'
 import { fetchAndValidate } from '../utils/fetch'
 import * as RM from 'hyper-ts/lib/ReaderMiddleware'
 import * as t from 'io-ts'
@@ -13,24 +10,19 @@ import { RouteHandler } from '../hyper-ts-routing/routing'
 import { pipe, flow } from 'fp-ts/function'
 import { Status } from 'hyper-ts'
 import { DateFromUnixTime, NonEmptyString, NumberFromString } from 'io-ts-types'
-import { Member, create } from '@unsplash/sum-types'
-import * as E from 'fp-ts/Either'
 import * as RTE from 'fp-ts/ReaderTaskEither'
-import * as R from 'fp-ts/Reader'
-import { match } from 'ts-pattern'
 
-const DateFromNumberFromString = NumberFromString.pipe(DateFromUnixTime)
-type DateFromNumberFromString = t.TypeOf<typeof DateFromNumberFromString>
+const UnixTimeFromString = NumberFromString.pipe(DateFromUnixTime)
+type UnixTimeFromString = t.TypeOf<typeof UnixTimeFromString>
 
 const Timeframe = t.keyof({
-  '1': null,
-  '5': null,
-  '15': null,
-  '30': null,
-  '60': null,
-  D: null,
-  W: null,
-  M: null,
+  day: null,
+  minute: null,
+  hour: null,
+  week: null,
+  month: null,
+  quarter: null,
+  year: null,
 })
 export type Timeframe = t.TypeOf<typeof Timeframe>
 
@@ -38,97 +30,95 @@ export const RouteParams = t.readonly(
   t.type({
     symbol: NonEmptyString,
     timeframe: Timeframe,
-    from: DateFromNumberFromString,
-    to: DateFromNumberFromString,
+    from: UnixTimeFromString,
+    to: UnixTimeFromString,
   }),
 )
 export type RouteParams = t.TypeOf<typeof RouteParams>
 
-const FinnhubCandleResponseOK = t.readonly(
-  t.type({
-    c: t.readonlyArray(t.number),
-    h: t.readonlyArray(t.number),
-    l: t.readonlyArray(t.number),
-    o: t.readonlyArray(t.number),
-    t: t.readonlyArray(DateFromUnixTime),
-    v: t.readonlyArray(t.number),
-    s: t.literal('ok'),
-  }),
-  'FinnhubCandleResponseOK',
+const PolygonCandleBar = t.readonly(
+  t.type(
+    {
+      c: t.number,
+      h: t.number,
+      l: t.number,
+      n: t.number,
+      o: t.number,
+      t: t.number,
+      v: t.number,
+      vw: t.number,
+    },
+    'CandleBar',
+  ),
 )
+export type PolygonCandleBar = t.TypeOf<typeof PolygonCandleBar>
 
-const FinnhubCandleResponseFAIL = t.readonly(
+export const PolygonTickerCandles = t.readonly(
   t.type({
-    s: t.literal('no_data'),
+    results: t.readonlyArray(PolygonCandleBar),
+    ticker: NonEmptyString,
+    resultsCount: t.number,
+    queryCount: t.number,
   }),
-  'FinnhubCandleResponseFAIL',
 )
-export const FinnhubCandleResponse = t.union(
-  [FinnhubCandleResponseOK, FinnhubCandleResponseFAIL],
-  'FinnhubCandleResponse',
-)
-export type FinnhubCandleResponse = t.TypeOf<typeof FinnhubCandleResponse>
+export type PolygonTickerCandles = t.TypeOf<typeof PolygonTickerCandles>
 
 export const Candles = t.readonly(
   t.type({
-    closePrices: t.readonlyArray(t.number),
-    highPrices: t.readonlyArray(t.number),
-    lowPrices: t.readonlyArray(t.number),
-    openPrices: t.readonlyArray(t.number),
-    timestamps: t.readonlyArray(DateFromUnixTime),
-    volumes: t.readonlyArray(t.number),
+    closePrice: t.number,
+    highPrice: t.number,
+    lowPrice: t.number,
+    openPrice: t.number,
+    volume: t.number,
   }),
   'Candles',
 )
 export interface Candles extends t.TypeOf<typeof Candles> {}
 
-type NoData = Member<'NoData'>
-const {
-  mk: { NoData },
-} = create<NoData>()
+export const CandlesResponse = t.readonly(
+  t.type({
+    results: t.readonlyArray(Candles),
+    tickerName: NonEmptyString,
+  }),
+)
 
-export const mapFinnhubResponseToCandles = (
-  obj: FinnhubCandleResponse,
-): E.Either<NoData, Candles> =>
-  match(obj)
-    .with({ s: 'no_data' }, () => E.left(NoData))
-    .with({ s: 'ok' }, (_) =>
-      E.right({
-        closePrices: _.c,
-        highPrices: _.h,
-        lowPrices: _.l,
-        openPrices: _.o,
-        timestamps: _.t,
-        volumes: _.v,
-      }),
-    )
-    .exhaustive()
+export const mapPolygonResponseToCandles = (_: PolygonCandleBar): Candles => ({
+  closePrice: _.c,
+  highPrice: _.h,
+  lowPrice: _.l,
+  openPrice: _.o,
+  volume: _.v,
+})
 
-export const getCandlesFromFinnhub = (
+export const getCandlesFromPolygon = (
   param: RouteParams,
-): RTE.ReaderTaskEither<FinnhubEnv, FetchError, FinnhubCandleResponse> =>
-  R.asks(({ finnhubApiKey, finnhubEndpoint }) =>
-    fetchAndValidate(
-      FinnhubCandleResponse,
-      `${finnhubEndpoint}/v1/stock/candle?symbol=${param.symbol}&resolution=${
-        param.timeframe
-      }&from=${DateFromUnixTime.encode(
-        param.from,
-      )}&to=${DateFromUnixTime.encode(param.to)}`,
-      { headers: { 'X-Finnhub-Token': unwrapFinnhubApiKey(finnhubApiKey) } },
+): RTE.ReaderTaskEither<
+  LoggerEnv & PolygonEnv,
+  FetchError,
+  PolygonTickerCandles
+> =>
+  RTE.asksReaderTaskEither(({ polygonEndpoint }) =>
+    pipe(
+      fetchAndValidate(
+        PolygonTickerCandles,
+        `${polygonEndpoint}v2/aggs/ticker/${param.symbol}/range/1/${
+          param.timeframe
+        }/${DateFromUnixTime.encode(param.from)}/${DateFromUnixTime.encode(
+          param.to,
+        )}?adjusted=true&sort=asc&limit=120`,
+      ),
+      fetchFromPolygon,
     ),
   )
 
 export const getCandlesHandler = (param: RouteParams): RouteHandler =>
   pipe(
-    getCandlesFromFinnhub(param),
+    getCandlesFromPolygon(param),
     RM.fromReaderTaskEither,
     RM.mapLeft(matchFetchErrorToRouteError),
-    RM.chainEitherK(
-      flow(
-        mapFinnhubResponseToCandles,
-        E.mapLeft(() => RouteError.mk.NotFound),
-      ),
-    ),
-    RM.ichainMiddlewareKW(flow(Candles.encode, (_) => sendJson(Status.OK, _))),
+    RM.map(({ results, ticker }) => ({
+      results: results.map(mapPolygonResponseToCandles),
+      tickerName: ticker,
+    })),
+    RM.ichainMiddlewareKW(flow(CandlesResponse.encode, sendJson(Status.OK))),
   )

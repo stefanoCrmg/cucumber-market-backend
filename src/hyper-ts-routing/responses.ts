@@ -25,24 +25,23 @@ export const sendBadRequest = ({
   H.ResponseEnded,
   never,
   void
-> => sendJson(H.Status.BadRequest, { message, errors })
+> => sendJson(H.Status.BadRequest)({ message, errors })
 
 export const sendUnauthorized = (
   message: string,
 ): M.Middleware<H.StatusOpen, H.ResponseEnded, never, void> =>
-  sendJson(H.Status.Unauthorized, { message })
+  sendJson(H.Status.Unauthorized)({ message })
 
 export const sendNotFound = sendStatus(H.Status.NotFound)
 export const sendInternalServerError = sendStatus(H.Status.InternalServerError)
 
-export const sendJson = (
-  status: H.Status,
-  body: unknown,
-): M.Middleware<H.StatusOpen, H.ResponseEnded, never, void> =>
-  pipe(
-    M.status(status),
-    M.ichain(() =>
-      M.json(body, (_) => SomeException({ exception: makeStandardError(_) })),
-    ),
-    M.orElse(() => sendInternalServerError),
-  )
+export const sendJson =
+  (status: H.Status) =>
+  (body: unknown): M.Middleware<H.StatusOpen, H.ResponseEnded, never, void> =>
+    pipe(
+      M.status(status),
+      M.ichain(() =>
+        M.json(body, (_) => SomeException({ exception: makeStandardError(_) })),
+      ),
+      M.orElse(() => sendInternalServerError),
+    )

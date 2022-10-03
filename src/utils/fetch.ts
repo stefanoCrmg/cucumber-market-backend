@@ -10,6 +10,7 @@ import * as t from 'io-ts'
 import { constVoid, flow, pipe } from 'fp-ts/function'
 import * as O from 'fp-ts/Option'
 import * as TE from 'fp-ts/TaskEither'
+import * as RTE from 'fp-ts/ReaderTaskEither'
 import {
   Member,
   create,
@@ -22,6 +23,7 @@ import { match } from 'ts-pattern'
 import { Json } from 'fp-ts/Json'
 import { NonEmptyString } from 'io-ts-types'
 import { fetch, RequestInfo, RequestInit, Response } from 'undici'
+import { LoggerEnv } from 'src/serverEnv'
 
 const CONTENT_TYPE_RESPONSE_HEADER = 'content-type'
 const CONTENT_TYPE_JSON = 'application/json'
@@ -139,7 +141,7 @@ export const getJson = (response: Response): TE.TaskEither<FetchError, Json> =>
 
 export const getJsonAndValidate =
   <A, O = A>(codec: t.Type<A, O, unknown>) =>
-  (response: Response): TE.TaskEither<FetchError, A> =>
+  (response: Response): RTE.ReaderTaskEither<LoggerEnv, FetchError, A> =>
     pipe(
       getJson(response),
       TE.chainEitherK(
@@ -150,11 +152,46 @@ export const getJsonAndValidate =
           ),
         ),
       ),
+      RTE.fromTaskEither,
+      RTE.chainFirstW((res) =>
+        pipe(
+          RTE.ask<LoggerEnv>(),
+          RTE.chainIOK(
+            ({ logger }) =>
+              () =>
+                logger.info({}, `Response OK`),
+          ),
+        ),
+      ),
     )
 
-export const fetchAndValidate = <A, O = A>(
-  codec: t.Type<A, O, unknown>,
-  input: RequestInfo | URL,
-  init?: RequestInit | undefined,
-): TE.TaskEither<FetchError, A> =>
-  pipe(fromFetch(input, init), TE.chain(getJsonAndValidate(codec)))
+export const fetchAndValidate =
+  <A, O = A>(codec: t.Type<A, O, unknown>, input: RequestInfo | URL) =>
+  (
+    init?: RequestInit | undefined,
+  ): RTE.ReaderTaskEither<LoggerEnv, FetchError, A> =>
+    pipe(
+      RTE.ask<LoggerEnv>(),
+      RTE.chainIOK(
+        ({ logger }) =>
+          () =>
+            logger.info({}, `Requesting ${codec.name} from ${input}`),
+      ),
+      RTE.chainTaskEitherK(() => fromFetch(input, init)),
+      RTE.chain(getJsonAndValidate(codec)),
+      RTE.orElseFirstW((err) =>
+        pipe(
+          RTE.ask<LoggerEnv>(),
+          RTE.chainIOK(
+            ({ logger }) =>
+              () =>
+                logger.error(
+                  {},
+                  `Fetching error: ${JSON.stringify(
+                    serialize<FetchError>(err)[0],
+                  )}`,
+                ),
+          ),
+        ),
+      ),
+    )

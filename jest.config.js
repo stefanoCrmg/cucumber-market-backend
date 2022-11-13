@@ -13,6 +13,7 @@ module.exports = {
     '^@fp/(.*)$': '<rootDir>/src/fp/$1',
   },
   modulePathIgnorePatterns: ['jestHelpers'],
+  setupFilesAfterEnv: ['@relmify/jest-fp-ts'],
   transform: {
     '^.+\\.(t|j)sx?$': ['@swc/jest', swcrc],
   },

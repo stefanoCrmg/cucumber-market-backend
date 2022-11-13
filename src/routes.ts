@@ -12,8 +12,13 @@ import {
   RouteParams as getCandlesRouteParams,
   Timeframe,
 } from '@handlers/getCandlesHandler'
+import {
+  getTickerNewsHandler,
+  RouteParams as getTickerNewsRouteParams,
+} from '@handlers/getTickerNewsHandler'
 import * as Sum from '@unsplash/sum-types'
 import * as t from 'io-ts'
+import * as O from 'fp-ts/Option'
 import { Handlers } from './hyper-ts-routing/routing'
 
 type Location =
@@ -29,6 +34,14 @@ type Location =
     >
   | Sum.Member<'TickerLookup', { readonly search: NonEmptyString }>
   | Sum.Member<'PostMe', { readonly userId: string }>
+  | Sum.Member<
+      'News',
+      {
+        readonly ticker: NonEmptyString
+        readonly limit: O.Option<number>
+        readonly order: O.Option<'asc' | 'desc'>
+      }
+    >
 
 const Location = Sum.create<Location>()
 
@@ -41,8 +54,14 @@ const tickerLookupMatch = pipe(
 )
 
 const candlesMatch = pipe(
-  lit('candle'),
+  lit('candles'),
   then(query(getCandlesRouteParams)),
+  then(end),
+)
+
+const newsMatch = pipe(
+  lit('news'),
+  then(query(getTickerNewsRouteParams)),
   then(end),
 )
 
@@ -54,14 +73,15 @@ const postMeMatch = pipe(
 
 export const router = zero<Location>()
   .alt(healthMatch.parser.map(Location.mk.Health))
-
   .alt(tickerLookupMatch.parser.map(Location.mk.TickerLookup))
   .alt(candlesMatch.parser.map(Location.mk.Candles))
   .alt(postMeMatch.parser.map(Location.mk.PostMe))
+  .alt(newsMatch.parser.map(Location.mk.News))
 
 export const handlers: Handlers<Location> = {
   Health: { get: () => getHealthHandler },
   TickerLookup: { get: findTickerHandler },
   Candles: { get: getCandlesHandler },
   PostMe: { post: postMeHandler },
+  News: { get: getTickerNewsHandler },
 }

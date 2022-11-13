@@ -1,3 +1,4 @@
+import '@relmify/jest-fp-ts'
 import { NonEmptyString } from 'io-ts-types'
 import * as getCandles from '../../src/handlers/getCandlesHandler'
 import * as RTE from 'fp-ts/ReaderTaskEither'
@@ -33,23 +34,26 @@ const mockPolygonTickerCandles_ResponseFail: getCandles.PolygonTickerCandles = {
 const spyCandlesRequest = jest.spyOn(getCandles, 'getCandlesFromPolygon')
 
 describe('Get Candles from Polygon', () => {
-  test('GET /candle?symbol=IBM&timeframe=day&from=166198320&to=166362480', async () => {
+  test('GET /candles?symbol=IBM&timeframe=day&from=166198320&to=166362480', async () => {
     spyCandlesRequest.mockImplementation(() =>
       RTE.right(mockPolygonTickerCandles_ResponseOK),
     )
     const res = await request(testServer)
-      .get('/candle?symbol=IBM&timeframe=day&from=166198320&to=166362480')
+      .get('/candles?symbol=IBM&timeframe=day&from=166198320&to=166362480')
       .expect(200)
     expect(getCandles.CandlesResponse.is(res.body)).toBeTruthy()
   })
 
-  test('No data from Polygon should result in NotFound', async () => {
+  test('No data from Polygon should result in 200 but with zero results', async () => {
     spyCandlesRequest.mockImplementation(() =>
       RTE.right(mockPolygonTickerCandles_ResponseFail),
     )
     const res = await request(testServer)
-      .get('/candle?symbol=IBM&timeframe=day&from=166198320&to=166362480')
+      .get('/candles?symbol=IBM&timeframe=day&from=166198320&to=166362480')
       .expect(200)
-    expect(getCandles.CandlesResponse.is(res.body)).toBeTruthy()
+
+    const decodedRes = getCandles.CandlesResponse.decode(res.body)
+    expect(decodedRes).toBeRight()
+    expect(decodedRes).toStrictEqualRight({ results: [], tickerName: 'IBM' })
   })
 })

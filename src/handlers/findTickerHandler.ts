@@ -1,5 +1,5 @@
-import { PolygonEnv, LoggerEnv } from './../serverEnv'
-import { FetchError, fetchAndValidate } from './../utils/fetch'
+import { PolygonEnv, LoggerEnv } from '../serverEnv'
+import { FetchError, fetchAndValidate } from '../utils/fetch'
 import { matchFetchErrorToRouteError } from '../hyper-ts-routing/routeError'
 import * as RM from 'hyper-ts/lib/ReaderMiddleware'
 import * as t from 'io-ts'
@@ -15,17 +15,18 @@ import {
 import * as RTE from 'fp-ts/ReaderTaskEither'
 import { fetchFromPolygon } from '../utils/polygon'
 
-export const RouteParams = t.readonly(t.type({ identifier: NonEmptyString }))
+export const RouteParams = t.readonly(t.type({ search: NonEmptyString }))
 export type RouteParams = t.TypeOf<typeof RouteParams>
 
-const Market = t.keyof({
+export const Market = t.keyof({
   stocks: null,
   otc: null,
   crypto: null,
   fx: null,
 })
+export type Market = t.TypeOf<typeof Market>
 
-const Ticker = t.readonly(
+export const Ticker = t.readonly(
   t.type(
     {
       active: t.boolean,
@@ -46,10 +47,10 @@ const Ticker = t.readonly(
 )
 export interface Ticker extends t.TypeOf<typeof Ticker> {}
 
-const TickerResponse = t.readonly(
+export const TickerResponse = t.readonly(
   t.type(
     {
-      count: t.number,
+      count: optionFromNullable(t.number),
       next_url: optionFromNullable(NonEmptyString),
       request_id: NonEmptyString,
       results: t.readonlyArray(Ticker),
@@ -60,22 +61,22 @@ const TickerResponse = t.readonly(
 )
 export interface TickerResponse extends t.TypeOf<typeof TickerResponse> {}
 
-export const searchSymbolOnPolygon = (
+export const searchTickerOnPolygon = (
   param: RouteParams,
 ): RTE.ReaderTaskEither<LoggerEnv & PolygonEnv, FetchError, TickerResponse> =>
   RTE.asksReaderTaskEither(({ polygonEndpoint }) =>
     pipe(
       fetchAndValidate(
         TickerResponse,
-        `${polygonEndpoint}v3/reference/tickers?type=CS&search=${param.identifier}&active=true&sort=ticker&order=asc&limit=10`,
+        `${polygonEndpoint}v3/reference/tickers?type=CS&search=${param.search}&active=true&sort=ticker&order=asc&limit=10`,
       ),
       fetchFromPolygon,
     ),
   )
 
-export const findSymbolHandler = (param: RouteParams): RouteHandler =>
+export const findTickerHandler = (param: RouteParams): RouteHandler =>
   pipe(
-    searchSymbolOnPolygon(param),
+    searchTickerOnPolygon(param),
     RM.fromReaderTaskEither,
     RM.mapLeft(matchFetchErrorToRouteError),
     RM.ichainMiddlewareKW(flow(TickerResponse.encode, sendJson(Status.OK))),

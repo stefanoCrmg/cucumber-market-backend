@@ -1,14 +1,13 @@
-import { FinnhubApiKey } from './../../src/serverEnv'
-import { prismaMock } from '../jestHelpers/prismaSingleton'
+import { PolygonApiKey } from './../../src/serverEnv'
 import { makeServer } from '../../src/makeServer'
 import * as _URL from 'fp-ts-std/URL'
 import { NonEmptyString } from 'io-ts-types'
 import pino from 'pino'
 
-const mockFinnhubApiKey: FinnhubApiKey = FinnhubApiKey.from(
+const mockPolygonApiKey: PolygonApiKey = PolygonApiKey.from(
   'hello' as NonEmptyString,
 )
-const mockFinnhubEndpoint: URL = _URL.unsafeParse('http://localhost')
+const mockPolygonEndpoint: URL = _URL.unsafeParse('http://localhost')
 
 const fakePino = {
   info: jest.fn(),
@@ -27,8 +26,7 @@ jest.doMock('pino', () => {
 })
 
 export const testServer = makeServer({
-  prismaClient: prismaMock,
-  finnhubApiKey: mockFinnhubApiKey,
-  finnhubEndpoint: mockFinnhubEndpoint,
+  polygonApiKey: { main: mockPolygonApiKey, backup: mockPolygonApiKey },
+  polygonEndpoint: mockPolygonEndpoint,
   logger: pino(),
 })

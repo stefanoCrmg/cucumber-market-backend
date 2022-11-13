@@ -2,16 +2,11 @@ import { NonEmptyString } from 'io-ts-types'
 import { end, lit, query, then, zero } from 'fp-ts-routing'
 import { pipe } from 'fp-ts/function'
 import { getHealthHandler } from '@handlers/getHealthHandler'
-import { getAnotherOneHandler } from '@handlers/getAnotherOneHandler'
 import { postMeHandler } from '@handlers/postMeHandler'
 import {
-  getQuoteHandler,
-  RouteParams as getQuoteRouteParams,
-} from '@handlers/getQuoteHandler'
-import {
-  findSymbolHandler,
-  RouteParams as findSymbolRouteParams,
-} from '@handlers/findSymbolHandler'
+  findTickerHandler,
+  RouteParams as findTickerRouteParams,
+} from '@handlers/findTickerHandler'
 import {
   getCandlesHandler,
   RouteParams as getCandlesRouteParams,
@@ -23,7 +18,6 @@ import { Handlers } from './hyper-ts-routing/routing'
 
 type Location =
   | Sum.Member<'Health', {}>
-  | Sum.Member<'Quote', { readonly symbol: NonEmptyString }>
   | Sum.Member<
       'Candles',
       {
@@ -33,23 +27,16 @@ type Location =
         readonly to: Date
       }
     >
-  | Sum.Member<'SymbolLookup', { readonly identifier: NonEmptyString }>
-  | Sum.Member<'AnotherOne', { readonly userId: string }>
+  | Sum.Member<'TickerLookup', { readonly search: NonEmptyString }>
   | Sum.Member<'PostMe', { readonly userId: string }>
 
 const Location = Sum.create<Location>()
 
 const healthMatch = pipe(lit('health'), then(end))
 
-const quoteMatch = pipe(
-  lit('quote'),
-  then(query(getQuoteRouteParams)),
-  then(end),
-)
-
-const symbolLookupMatch = pipe(
-  lit('symbol'),
-  then(query(findSymbolRouteParams)),
+const tickerLookupMatch = pipe(
+  lit('ticker'),
+  then(query(findTickerRouteParams)),
   then(end),
 )
 
@@ -59,11 +46,6 @@ const candlesMatch = pipe(
   then(end),
 )
 
-const anotherOneMatch = pipe(
-  lit('another'),
-  then(query(t.readonly(t.type({ userId: t.string })))),
-  then(end),
-)
 const postMeMatch = pipe(
   lit('post-me'),
   then(query(t.readonly(t.type({ userId: t.string })))),
@@ -72,17 +54,14 @@ const postMeMatch = pipe(
 
 export const router = zero<Location>()
   .alt(healthMatch.parser.map(Location.mk.Health))
-  .alt(quoteMatch.parser.map(Location.mk.Quote))
-  .alt(symbolLookupMatch.parser.map(Location.mk.SymbolLookup))
+
+  .alt(tickerLookupMatch.parser.map(Location.mk.TickerLookup))
   .alt(candlesMatch.parser.map(Location.mk.Candles))
-  .alt(anotherOneMatch.parser.map(Location.mk.AnotherOne))
   .alt(postMeMatch.parser.map(Location.mk.PostMe))
 
 export const handlers: Handlers<Location> = {
   Health: { get: () => getHealthHandler },
-  Quote: { get: getQuoteHandler },
-  SymbolLookup: { get: findSymbolHandler },
+  TickerLookup: { get: findTickerHandler },
   Candles: { get: getCandlesHandler },
-  AnotherOne: { get: getAnotherOneHandler },
   PostMe: { post: postMeHandler },
 }

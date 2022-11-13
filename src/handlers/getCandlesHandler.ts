@@ -9,7 +9,12 @@ import { sendJson } from '../hyper-ts-routing/responses'
 import { RouteHandler } from '../hyper-ts-routing/routing'
 import { pipe, flow } from 'fp-ts/function'
 import { Status } from 'hyper-ts'
-import { DateFromUnixTime, NonEmptyString, NumberFromString } from 'io-ts-types'
+import {
+  DateFromUnixTime,
+  NonEmptyString,
+  NumberFromString,
+  withFallback,
+} from 'io-ts-types'
 import * as RTE from 'fp-ts/ReaderTaskEither'
 
 const UnixTimeFromString = NumberFromString.pipe(DateFromUnixTime)
@@ -55,7 +60,7 @@ export type PolygonCandleBar = t.TypeOf<typeof PolygonCandleBar>
 
 export const PolygonTickerCandles = t.readonly(
   t.type({
-    results: t.readonlyArray(PolygonCandleBar),
+    results: withFallback(t.readonlyArray(PolygonCandleBar), []),
     ticker: NonEmptyString,
     resultsCount: t.number,
     queryCount: t.number,
